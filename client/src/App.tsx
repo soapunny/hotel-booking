@@ -10,7 +10,7 @@
 import { useEffect, useState } from "react";
 
 // ✅ 우리가 만든 axios 인스턴스 (백엔드 API와 통신용)
-import { api } from "./lib/api";
+import api from "./lib/api";
 
 // ============================================
 // 타입(Type) 정의 영역
