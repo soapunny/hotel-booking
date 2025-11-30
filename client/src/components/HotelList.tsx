@@ -1,5 +1,4 @@
 // client/src/components/HotelList.tsx
-import React from "react";
 import type { Hotel, Room } from "../types";
 
 interface HotelListProps {

@@ -1,5 +1,4 @@
 // client/src/components/BookingList.tsx
-import React from "react";
 import type { Booking } from "../types";
 
 interface BookingListProps {

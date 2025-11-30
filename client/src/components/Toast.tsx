@@ -1,7 +1,7 @@
 // client/src/components/Toast.tsx
 // 토스트 알림 컴포넌트
 
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 
 interface ToastProps {
   message: string;
