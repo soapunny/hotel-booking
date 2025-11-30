@@ -231,6 +231,52 @@ app.get("/bookings", async (req, res) => {
 });
 
 // ===============================
+// 6. 예약 취소
+// ===============================
+//
+// POST /bookings/:id/cancel
+// - 실제로 삭제하는 게 아니라 status 를 'cancelled' 로 바꿔준다.
+//
+app.post("/bookings/:id/cancel", async (req, res) => {
+  try {
+    // 1) URL 파라미터에서 예약 id 가져오기
+    const id = Number(req.params.id);
+
+    if (Number.isNaN(id)) {
+      return res.status(400).json({ error: "잘못된 예약 ID 입니다." });
+    }
+
+    // 2) 해당 예약이 실제로 존재하는지 확인
+    const booking = await prisma.booking.findUnique({
+      where: { id },
+    });
+
+    if (!booking) {
+      return res.status(404).json({ error: "예약을 찾을 수 없습니다." });
+    }
+
+    // 3) 이미 취소된 예약이면 그대로 반환
+    if (booking.status === "cancelled") {
+      return res.json(booking);
+    }
+
+    // 4) status 를 'cancelled' 로 업데이트
+    const updated = await prisma.booking.update({
+      where: { id },
+      data: {
+        status: "cancelled",
+      },
+    });
+
+    // 5) 업데이트된 예약 정보 반환
+    res.json(updated);
+  } catch (err) {
+    console.error("Cancel booking error:", err);
+    res.status(500).json({ error: "Failed to cancel booking" });
+  }
+});
+
+// ===============================
 // 서버 실행
 // ===============================
 

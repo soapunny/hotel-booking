@@ -164,6 +164,28 @@ function App() {
   };
 
   // ============================================
+  // 예약 취소 버튼 눌렀을 때 실행되는 함수
+  // ============================================
+  const handleCancelBooking = async (bookingId: number) => {
+    // 1) 정말 취소할 건지 한 번 더 확인 (실수 방지)
+    const ok = window.confirm("정말 이 예약을 취소하시겠습니까?");
+    if (!ok) return;
+
+    try {
+      // 2) 백엔드에 취소 요청 보내기
+      //    -> 우리가 Express에서 만든 라우트: POST /bookings/:id/cancel
+      await api.post(`/bookings/${bookingId}/cancel`);
+
+      // 3) 취소가 성공했으니, 최신 예약 목록 다시 불러오기
+      //    -> 상태를 갱신해서 화면이 자동으로 업데이트되도록 한다.
+      fetchBookings();
+    } catch (err) {
+      console.error("Cancel booking error:", err);
+      alert("예약 취소에 실패했습니다. 잠시 후 다시 시도해주세요.");
+    }
+  };
+
+  // ============================================
   // 화면에 실제로 출력되는 JSX 영역
   // ============================================
   return (
@@ -337,23 +359,66 @@ function App() {
         >
           <h2 style={{ marginBottom: 12 }}>내 예약 목록</h2>
 
-          {bookings.map((b) => (
-            <div
-              key={b.id}
-              style={{
-                padding: 10,
-                borderBottom: "1px solid #333",
-                marginBottom: 8,
-              }}
-            >
-              <div>호텔: {b.room.hotel.name}</div>
-              <div>방 번호: {b.room.roomNumber}</div>
-              <div>
-                기간: {b.checkIn.slice(0, 10)} ~ {b.checkOut.slice(0, 10)}
+          {bookings.map((b) => {
+            // ========================================
+            // 숙박 일수 + 총 금액 계산 (보너스)
+            // ========================================
+            const checkInDate = new Date(b.checkIn);
+            const checkOutDate = new Date(b.checkOut);
+            const diffMs = checkOutDate.getTime() - checkInDate.getTime();
+            const nights = diffMs / (1000 * 60 * 60 * 24); // 밀리초 -> 일 수
+            const roomPrice = b.room?.price ?? 0;
+            const totalPrice = nights * roomPrice;
+
+            return (
+              <div
+                key={b.id}
+                style={{
+                  padding: 10,
+                  borderBottom: "1px solid #333",
+                  marginBottom: 8,
+                  // status가 cancelled면 살짝 투명하게 (취소된 예약 느낌)
+                  opacity: b.status === "cancelled" ? 0.6 : 1,
+                }}
+              >
+                <div>호텔: {b.room.hotel.name}</div>
+                <div>방 번호: {b.room.roomNumber}</div>
+                <div>
+                  기간: {b.checkIn.slice(0, 10)} ~ {b.checkOut.slice(0, 10)} (
+                  {nights}박)
+                </div>
+                <div>1박 요금: {roomPrice.toLocaleString()}원</div>
+                <div>총 요금: {totalPrice.toLocaleString()}원</div>
+                <div>상태: {b.status}</div>
+
+                {/* ========================================
+             상태에 따라 다른 UI 보여주기
+             confirmed -> "예약 취소" 버튼
+             cancelled -> 이미 취소됨 표시
+          ========================================= */}
+                {b.status === "confirmed" ? (
+                  <button
+                    onClick={() => handleCancelBooking(b.id)}
+                    style={{
+                      marginTop: 8,
+                      padding: "4px 10px",
+                      borderRadius: 4,
+                      border: "none",
+                      backgroundColor: "#d32f2f",
+                      color: "#fff",
+                      cursor: "pointer",
+                    }}
+                  >
+                    예약 취소
+                  </button>
+                ) : (
+                  <div style={{ marginTop: 8, fontSize: 12, opacity: 0.8 }}>
+                    이미 취소된 예약입니다.
+                  </div>
+                )}
               </div>
-              <div>상태: {b.status}</div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
