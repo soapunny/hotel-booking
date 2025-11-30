@@ -1,75 +1,66 @@
-# React + TypeScript + Vite
+# Hotel Booking App (Fullstack)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React + Node.js + Prisma + MariaDB로 만든 **풀스택 호텔 예약 웹 애플리케이션** 입니다.  
+호텔 및 객실 조회, 날짜 선택, 예약 생성, 예약 목록 조회, 예약 취소까지 **실제 서비스 흐름 전체를 구현** 했습니다.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 주요 기능
 
-## React Compiler
+- 호텔 목록 조회
+- 객실 목록 조회
+- 체크인 / 체크아웃 날짜 선택
+- 객실 예약 생성
+- 내 예약 목록 조회
+- 예약 취소 (status 기반)
+- DB 상태에 따른 UI 반영
 
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
+---
 
-Note: This will impact Vite dev & build performances.
+## 기술 스택
 
-## Expanding the ESLint configuration
+### Frontend
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- React
+- TypeScript
+- Vite
+- Axios
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### Backend
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+- Node.js
+- Express
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+### Database & ORM
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+- MariaDB
+- Prisma ORM
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### DevOps (예정)
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+- GitHub
+- Vercel (Frontend)
+- Render (Backend)
+
+---
+
+## 프로젝트 구조
+
+```text
+hotel_booking
+├─ client/          # React Frontend
+│  ├─ src/
+│  ├─ package.json
+│  └─ vite.config.ts
+│
+├─ server/          # Node.js Backend
+│  ├─ src/
+│  │  └─ index.js
+│  ├─ prisma/
+│  │  ├─ schema.prisma
+│  │  └─ migrations/
+│  ├─ .env
+│  └─ package.json
+│
+└─ README.md
 ```
