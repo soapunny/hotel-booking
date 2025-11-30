@@ -183,8 +183,11 @@ app.post("/bookings", async (req, res) => {
         status: "confirmed", // 일단 바로 'confirmed'로 저장
       },
       include: {
-        room: true,
-        user: true,
+        room: {
+          include: {
+            hotel: true, // ✅ 추가
+          },
+        },
       },
     });
 
