@@ -9,8 +9,9 @@ import {
   cancelBooking,
 } from "./lib/api";
 import { HotelList } from "./components/HotelList";
-import { BookingList } from "./components/BookingList";
+import BookingList from "./components/BookingList";
 import Toast from "./components/Toast";
+import ConfirmModal from "./components/ConfirmModal";
 
 function App() {
   // ============================
@@ -26,6 +27,15 @@ function App() {
 
   const [toastMessage, setToastMessage] = useState("");
   const [toastType, setToastType] = useState<"success" | "error">("success");
+
+  // 예약 취소 확인 모달용 상태
+  const [confirmState, setConfirmState] = useState<{
+    open: boolean;
+    bookingId: number | null;
+  }>({
+    open: false,
+    bookingId: null,
+  });
 
   const [showBookings, setShowBookings] = useState(false);
 
@@ -66,7 +76,10 @@ function App() {
   const showToast = (msg: string, type: "success" | "error" = "success") => {
     setToastMessage(msg);
     setToastType(type);
-    setTimeout(() => setToastMessage(""), 3000);
+
+    setTimeout(() => {
+      setToastMessage("");
+    }, 3000);
   };
 
   // ============================
@@ -91,7 +104,7 @@ function App() {
       showToast("예약이 완료되었습니다!", "success");
     } catch (err) {
       console.error("예약 실패:", err);
-      showToast("예약 중 오류가 발생했습니다.", "error");
+      showToast("예약 취소 중 오류가 발생했습니다.", "error");
     } finally {
       setBookingProcessing(false);
     }
@@ -100,25 +113,41 @@ function App() {
   // ============================
   // 예약 취소 버튼 핸들러
   // ============================
-  const handleCancelBooking = async (bookingId: number) => {
-    const confirmCancel = window.confirm("정말 이 예약을 취소하시겠습니까?");
-    if (!confirmCancel) return;
+  // 예약 취소 버튼 클릭 시 - 실제로 서버 호출은 아직 안 함
+  const handleRequestCancel = (bookingId: number) => {
+    setConfirmState({
+      open: true,
+      bookingId,
+    });
+  };
+  async function handleConfirmCancel() {
+    // 취소할 예약이 없으면 그냥 종료
+    if (confirmState.bookingId == null) return;
 
     try {
       setBookingProcessing(true);
-      const updated = await cancelBooking(bookingId);
 
-      setBookings((prev) =>
-        prev.map((b) => (b.id === updated.id ? updated : b))
-      );
+      // 1) 백엔드에 취소 요청
+      await cancelBooking(confirmState.bookingId);
+
+      // 2) 내 예약 목록 새로 가져오기
+      const updated = await fetchMyBookings();
+      setBookings(updated);
+
+      // 3) 토스트 메시지 (showToast만 사용)
       showToast("예약이 취소되었습니다.", "success");
-    } catch (err) {
-      console.error("예약 취소 실패:", err);
+    } catch (error) {
+      console.error("예약 취소 실패:", error);
       showToast("예약 취소 중 오류가 발생했습니다.", "error");
     } finally {
       setBookingProcessing(false);
+      // 모달 닫고 대상 초기화
+      setConfirmState({
+        open: false,
+        bookingId: null,
+      });
     }
-  };
+  }
 
   // ============================
   // 렌더링
@@ -180,7 +209,7 @@ function App() {
         {showBookings && (
           <section id="my-bookings" style={{ marginTop: 32 }}>
             <h2>내 예약 목록</h2>
-            <BookingList bookings={bookings} onCancel={handleCancelBooking} />
+            <BookingList bookings={bookings} onCancel={handleRequestCancel} />
           </section>
         )}
       </main>
@@ -190,6 +219,21 @@ function App() {
         message={toastMessage}
         type={toastType}
         onClose={() => setToastMessage("")}
+      />
+      <ConfirmModal
+        isOpen={confirmState.open}
+        message="정말 이 예약을 취소하시겠습니까?"
+        confirmLabel={isBookingProcessing ? "취소 중..." : "확인"}
+        cancelLabel="취소"
+        disabled={isBookingProcessing}
+        onConfirm={handleConfirmCancel}
+        onCancel={() => {
+          if (isBookingProcessing) return; // 취소 중일 땐 닫지 않기
+          setConfirmState({
+            open: false,
+            bookingId: null,
+          });
+        }}
       />
     </div>
   );

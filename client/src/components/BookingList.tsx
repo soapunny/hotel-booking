@@ -6,65 +6,85 @@ interface BookingListProps {
   bookings: Booking[];
   onCancel: (bookingId: number) => void;
 }
+const formatDate = (iso: string) => {
+  const d = new Date(iso);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}.${m}.${day}`;
+};
 
-export function BookingList({ bookings, onCancel }: BookingListProps) {
+const getHotelName = (booking: Booking) => {
+  return booking.room?.hotel?.name ?? "알 수 없음";
+};
+
+const getRoomNumber = (booking: Booking) => {
+  return booking.room?.roomNumber ?? booking.roomId;
+};
+
+export default function BookingList({ bookings, onCancel }: BookingListProps) {
   if (bookings.length === 0) {
-    return <p>아직 예약한 내역이 없습니다.</p>;
+    return <p className="empty-bookings">아직 예약한 내역이 없습니다.</p>;
   }
 
   return (
     <>
       {bookings.map((booking) => {
+        const checkInDate = new Date(booking.checkIn);
+        const checkOutDate = new Date(booking.checkOut);
+
         const nights =
-          (new Date(booking.checkOut).getTime() -
-            new Date(booking.checkIn).getTime()) /
+          (checkOutDate.getTime() - checkInDate.getTime()) /
           (1000 * 60 * 60 * 24);
 
         const isCancelled = booking.status === "cancelled";
+        const nightlyPrice = booking.room?.price ?? 0;
+        const totalPrice = nightlyPrice * nights;
 
         return (
           <section
             key={booking.id}
-            style={{
-              backgroundColor: isCancelled ? "#020617" : "#111827",
-              borderRadius: 12,
-              padding: 16,
-              marginBottom: 12,
-              opacity: isCancelled ? 0.5 : 1,
-            }}
+            className={
+              "booking-card" + (isCancelled ? " booking-card--cancelled" : "")
+            }
           >
-            <p style={{ fontSize: 14, color: "#9ca3af" }}>
-              호텔: {booking.hotel?.name ?? "Test Hotel"}
+            <p className="booking-hotel-name">
+              호텔: {getHotelName(booking) ?? "알 수 없음"}
             </p>
-            <p>방 번호: {booking.room?.roomNumber ?? booking.roomId}</p>
-            <p>
-              기간: {booking.checkIn.slice(0, 10)} ~{" "}
-              {booking.checkOut.slice(0, 10)} ({nights}박)
-            </p>
-            <p>상태: {booking.status}</p>
+            <p>방 번호: {getRoomNumber(booking)}</p>
 
-            {!isCancelled && (
-              <button
-                onClick={() => onCancel(booking.id)}
-                style={{
-                  marginTop: 8,
-                  padding: "6px 12px",
-                  backgroundColor: "#ef4444",
-                  borderRadius: 6,
-                  border: "none",
-                  color: "#fff",
-                  fontSize: 14,
-                  cursor: "pointer",
-                }}
+            <p className="booking-dates">
+              기간: {formatDate(booking.checkIn)} ~{" "}
+              {formatDate(booking.checkOut)} ({nights}박)
+            </p>
+
+            <p>1박 요금: {nightlyPrice.toLocaleString()}원</p>
+            <p>총 요금: {totalPrice.toLocaleString()}원</p>
+
+            <div className="booking-footer">
+              <span
+                className={
+                  "booking-status " +
+                  (isCancelled
+                    ? "booking-status--cancelled"
+                    : "booking-status--confirmed")
+                }
               >
-                예약 취소
-              </button>
-            )}
+                {booking.status}
+              </span>
+
+              {!isCancelled && (
+                <button
+                  className="cancel-button"
+                  onClick={() => onCancel(booking.id)}
+                >
+                  예약 취소
+                </button>
+              )}
+            </div>
 
             {isCancelled && (
-              <p style={{ marginTop: 8, fontSize: 12, color: "#6b7280" }}>
-                이미 취소된 예약입니다.
-              </p>
+              <p className="booking-cancel-note">이미 취소된 예약입니다.</p>
             )}
           </section>
         );

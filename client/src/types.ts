@@ -7,6 +7,7 @@ export interface Room {
   roomNumber: string;
   type: string;
   price: number;
+  hotel?: Hotel;
 }
 
 export interface Hotel {
