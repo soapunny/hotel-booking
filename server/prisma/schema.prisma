@@ -1,0 +1,87 @@
+// ===============================
+// 데이터베이스 & Prisma 기본 설정
+// ===============================
+
+datasource db {
+  // 어떤 종류의 DB를 쓸지 설정
+  // 우리는 MariaDB지만, Prisma에서는 MySQL과 같은 드라이버를 사용하므로 "mysql" 로 적는다.
+  provider = "mysql"
+
+  // .env 파일에 있는 DATABASE_URL 값을 읽어서 사용한다. 에러가 뜨는 이유는 VS_CODE Prisma 확장의 최신문법 반영으로 5.22.0 문법을 에러로 잡음(에러 x)
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  // Prisma가 JavaScript/Node에서 사용할 Client 코드를 자동 생성해준다.
+  provider = "prisma-client-js"
+}
+
+// ===============================
+// User: 예약하는 사용자 정보
+// ===============================
+//
+// 한 명의 유저는 여러 개의 예약(Booking)을 가질 수 있다.
+//
+model User {
+  id        Int       @id @default(autoincrement()) // 숫자 기본키, 자동 증가
+  email     String    @unique                      // 이메일, 중복 불가
+  name      String?                               // 이름 (있어도 되고 없어도 됨 -> ?)
+  password  String                                // 비밀번호 (추후 해시해서 저장)
+  bookings  Booking[]                             // 이 유저가 가진 예약들 (1:N 관계)
+  createdAt DateTime  @default(now())             // 생성 시각, 기본값: 현재 시간
+}
+
+// ===============================
+// Hotel: 호텔 정보
+// ===============================
+//
+// 한 호텔은 여러 개의 방(Room)을 가진다.
+//
+model Hotel {
+  id        Int       @id @default(autoincrement())
+  name      String     // 호텔 이름
+  city      String     // 도시 (예: "Seoul", "Busan")
+  address   String     // 상세 주소
+  rooms     Room[]     // 이 호텔이 가진 방들 (1:N 관계)
+  createdAt DateTime  @default(now())
+}
+
+// ===============================
+// Room: 방 정보
+// ===============================
+//
+// 각 방은 한 호텔에 속한다.
+// 한 방은 여러 개의 예약(Booking)을 가질 수 있다.
+//
+model Room {
+  id         Int       @id @default(autoincrement())
+  hotel      Hotel     @relation(fields: [hotelId], references: [id]) // 어떤 호텔에 속해 있는지
+  hotelId    Int       // Hotel의 id를 참조하는 외래키(FK)
+  roomNumber String    // 방 번호 (예: "101", "802")
+  type       String    // 방 타입 (예: "single", "double", "suite")
+  price      Int       // 1박 가격 (원/달러 등, 정수형)
+  bookings   Booking[] // 이 방에 대한 예약들 (1:N)
+}
+
+// ===============================
+// Booking: 실제 예약 정보
+// ===============================
+//
+// 한 예약은 "유저 1명" + "방 1개"에 연결된다.
+//
+model Booking {
+  id        Int       @id @default(autoincrement())
+  
+  // 예약을 한 유저와의 관계 (N:1)
+  user      User      @relation(fields: [userId], references: [id])
+  userId    Int       // User의 id를 참조하는 FK
+
+  // 예약된 방과의 관계 (N:1)
+  room      Room      @relation(fields: [roomId], references: [id])
+  roomId    Int       // Room의 id를 참조하는 FK
+
+  checkIn   DateTime  // 체크인 날짜
+  checkOut  DateTime  // 체크아웃 날짜
+  status    String    // 예약 상태 (예: "pending", "confirmed", "cancelled")
+  createdAt DateTime  @default(now())
+}
