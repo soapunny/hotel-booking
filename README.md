@@ -41,8 +41,8 @@ React + Node.js + Prisma + MariaDB로 만든 **풀스택 호텔 예약 웹 애�
 ### DevOps (예정)
 
 - GitHub
-- Vercel (Frontend)
-- Render (Backend)
+- Vercel [Frontend]
+- Render(Server)/Railway(DB) [Backend]
 
 ---
 
